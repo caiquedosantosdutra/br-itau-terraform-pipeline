@@ -1,12 +1,60 @@
-provider "aws" {
-  region = "us-east-2"                         
-}
+data "aws_caller_identity" "current" {}
+
+data "aws_availability_zones" "available" {}
 
 resource "aws_vpc" "main" {
   cidr_block = "10.0.0.0/16"
+  enable_dns_support = true
+  enable_dns_hostnames = true
+
   tags = {
     Name = "main"
   }
+}
+
+resource "aws_flow_log" "vpc_flow_log" {
+  log_destination_type = "cloud-watch-logs"
+  log_group_name       = aws_cloudwatch_log_group.vpc_logs.name
+  iam_role_arn         = aws_iam_role.flow_log_role.arn
+  traffic_type         = "ALL"
+  vpc_id               = aws_vpc.main.id
+}
+
+resource "aws_cloudwatch_log_group" "vpc_logs" {
+  name              = "/vpc/flow-logs"
+  retention_in_days = 30
+}
+
+resource "aws_iam_role" "flow_log_role" {
+  name = "flow-log-role"
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Action = "sts:AssumeRole"
+      Effect = "Allow"
+      Principal = {
+        Service = "vpc-flow-logs.amazonaws.com"
+      }
+    }]
+  })
+}
+
+resource "aws_iam_role_policy" "flow_log_policy" {
+  name = "flow-log-policy"
+  role = aws_iam_role.flow_log_role.id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Action = [
+        "logs:CreateLogStream",
+        "logs:PutLogEvents"
+      ]
+      Effect   = "Allow"
+      Resource = "*"
+    }]
+  })
 }
 
 resource "aws_internet_gateway" "igw" {
@@ -19,8 +67,9 @@ resource "aws_internet_gateway" "igw" {
 resource "aws_subnet" "main" {
   vpc_id                  = aws_vpc.main.id
   cidr_block              = "10.0.1.0/24"
-  availability_zone       = "us-east-1a"
-  map_public_ip_on_launch = true
+  availability_zone       = data.aws_availability_zones.available.names[0]
+  map_public_ip_on_launch = false
+
   tags = {
     Name = "main-subnet"
   }
@@ -28,10 +77,12 @@ resource "aws_subnet" "main" {
 
 resource "aws_route_table" "rtable" {
   vpc_id = aws_vpc.main.id
+
   route {
     cidr_block = "0.0.0.0/0"
     gateway_id = aws_internet_gateway.igw.id
   }
+
   tags = {
     Name = "main-rt"
   }
@@ -44,20 +95,22 @@ resource "aws_route_table_association" "a" {
 
 resource "aws_security_group" "sg" {
   name        = "allow_ssh"
-  description = "Allow SSH inbound traffic"
+  description = "Allow SSH from my IP only"
   vpc_id      = aws_vpc.main.id
 
   ingress {
+    description = "SSH from my IP"
     from_port   = 22
     to_port     = 22
     protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
+    cidr_blocks = ["2804:14c:165:28c8:1470:3199:d011:b97f/32"]
   }
 
   egress {
-    from_port   = 0
-    to_port     = 0
-    protocol    = "-1"
+    description = "Allow HTTPS outbound"
+    from_port   = 443
+    to_port     = 443
+    protocol    = "tcp"
     cidr_blocks = ["0.0.0.0/0"]
   }
 
@@ -71,7 +124,7 @@ resource "aws_instance" "ec2_instance" {
   instance_type               = "t3.micro"
   subnet_id                   = aws_subnet.main.id
   vpc_security_group_ids      = [aws_security_group.sg.id]
-  associate_public_ip_address = true
+  associate_public_ip_address = false
 
   metadata_options {
     http_endpoint               = "enabled"
