@@ -1,5 +1,13 @@
+resource "aws_s3_bucket" "log_storage" {
+  bucket = "terraform-pipeline-itau-logs"
+}
+
 resource "aws_s3_bucket" "log_bucket" {
   bucket = "terraform-pipeline-itau"
+  logging {
+    target_bucket = aws_s3_bucket.log_storage.id
+    target_prefix = "log/"
+  }
 }
 
 resource "aws_s3_bucket_ownership_controls" "ownership" {
