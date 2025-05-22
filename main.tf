@@ -1,10 +1,22 @@
+
 provider "aws" {
   region = "us-east-2"
 }
+resource "aws_kms_key" "tf_state" {
+  description             = "KMS key for Terraform state bucket"
+  enable_key_rotation     = true
+  deletion_window_in_days = 7
+}
 
+resource "aws_s3_bucket" "log_storage" {
+  bucket = "terraform-pipeline-itau-access-logs"
+}
 resource "aws_s3_bucket" "tf_state" {
   bucket = "terraform-pipeline-itau"
-
+  logging {
+    target_bucket = aws_s3_bucket.log_storage.bucket
+    target_prefix = "access-logs/"
+  }
   versioning {
     enabled = true
   }
