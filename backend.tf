@@ -1,7 +1,7 @@
 terraform {
   backend "s3" {
     bucket         = "terraform-pipeline-itau"
-    region         = "us-east-1"
+    region         = "us-east-2"
     key            = "s3-github-actions/terraform.tfstate"
     encrypt = true
   }
