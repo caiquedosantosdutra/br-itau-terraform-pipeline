@@ -35,7 +35,7 @@ resource "aws_s3_bucket_versioning" "versioning" {
 }
 
 resource "aws_kms_key" "mykey" {
-  description             = "This key is used to encrypt bucket objects"
+  description             = "KMS key for S3 bucket encryption"
   enable_key_rotation     = true
   deletion_window_in_days = 7
 }
@@ -50,3 +50,56 @@ resource "aws_s3_bucket_server_side_encryption_configuration" "encryption" {
     }
   }
 }
+
+resource "aws_cloudtrail" "s3_trail" {
+  name                          = "s3-access-logs"
+  s3_bucket_name                = aws_s3_bucket.log_bucket.id
+  include_global_service_events = true
+  is_multi_region_trail         = true
+  enable_logging                = true
+
+  event_selector {
+    read_write_type           = "All"
+    include_management_events = true
+
+    data_resource {
+      type   = "AWS::S3::Object"
+      values = ["arn:aws:s3:::${aws_s3_bucket.log_bucket.bucket}/"]
+    }
+  }
+}
+
+resource "aws_s3_bucket_policy" "log_bucket_policy" {
+  bucket = aws_s3_bucket.log_bucket.id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Sid = "AWSCloudTrailAclCheck"
+        Effect = "Allow"
+        Principal = {
+          Service = "cloudtrail.amazonaws.com"
+        }
+        Action = "s3:GetBucketAcl"
+        Resource = "arn:aws:s3:::${aws_s3_bucket.log_bucket.bucket}"
+      },
+      {
+        Sid = "AWSCloudTrailWrite"
+        Effect = "Allow"
+        Principal = {
+          Service = "cloudtrail.amazonaws.com"
+        }
+        Action = "s3:PutObject"
+        Resource = "arn:aws:s3:::${aws_s3_bucket.log_bucket.bucket}/AWSLogs/${data.aws_caller_identity.current.account_id}/*"
+        Condition = {
+          StringEquals = {
+            "s3:x-amz-acl" = "bucket-owner-full-control"
+          }
+        }
+      }
+    ]
+  })
+}
+
+data "aws_caller_identity" "current" {}
