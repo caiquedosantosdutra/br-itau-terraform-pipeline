@@ -39,7 +39,7 @@ jobs:
     - name: Check if Terraform state exists in S3
       id: check_state
       run: |
-        if aws s3 ls "s3://${BUCKET_NAME}/${STATE_FILE_PATH}" > /dev/null 2>&1; then
+        if aws s3 ls "s3://terraform-pipeline-itau/s3-github-actions/terraform.tfstate" > /dev/null 2>&1; then
           echo "exists=true" >> $GITHUB_OUTPUT
         else
           echo "exists=false" >> $GITHUB_OUTPUT
