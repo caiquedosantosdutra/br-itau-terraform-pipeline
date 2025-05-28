@@ -52,9 +52,5 @@ jobs:
       run: terraform plan
 
     - name: Terraform Apply
-      if: steps.check_state.outputs.exists == 'false'
       run: terraform apply -auto-approve
 
-    - name: Terraform Refresh 
-      if: steps.check_state.outputs.exists == 'true'
-      run: terraform apply -refresh-only -auto-approve
