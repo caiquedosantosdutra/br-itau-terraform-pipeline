@@ -1,7 +1,7 @@
 
 resource "aws_instance" "ec2_instance_itau" {
   ami                         = "ami-06c8f2ec674c67112"
-  instance_type               = "t2.medium"
+  instance_type               = "t2.micro"
   subnet_id                   = "subnet-09f35be1a6f0f024b"
 
 
