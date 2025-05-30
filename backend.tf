@@ -1,11 +1,11 @@
 terraform {
   required_version = "~> 1.4.0"
-  backend "s3" {
-    bucket         = "terraform-pipeline-itau"
-    region         = "us-east-2"
-    key            = "terraform.tfstate"
-    encrypt = true
-  }
+  cloud {
+      organization = "poc-itau-org"
+      workspaces {
+        name = "itau-pipeline-workspace"
+      }
+    }
   required_providers {
     aws = {
       version = "~> 3.65.0"
