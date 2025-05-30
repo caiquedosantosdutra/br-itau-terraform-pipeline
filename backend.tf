@@ -1,14 +1,14 @@
 terraform {
-   cloud {
-    organization = "poc-itau-org"
-    workspaces {
-      name = "itau-pipeline-workspace"
-    }
-   }
-  required_version = ">=0.13.0"
+  required_version = "~> 1.4.0"
+  backend "s3" {
+    bucket         = "terraform-pipeline-itau"
+    region         = "us-east-2"
+    key            = "terraform.tfstate"
+    encrypt = true
+  }
   required_providers {
     aws = {
-      version = ">= 2.7.0"
+      version = "~> 3.65.0"
       source = "hashicorp/aws"
     }
   }
