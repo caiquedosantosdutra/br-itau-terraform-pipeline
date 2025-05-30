@@ -18,7 +18,7 @@ jobs:
       TF_VERSION: '1.4.0'
       TFLINT_VERSION: '0.46.1' 
       TFSEC_VERSION: '1.28.1'
-      TF_CLOUD_ORGANIZATION: "POC-I"
+      TF_CLOUD_ORGANIZATION: "poc-itau-org"
       TF_TOKEN_app_terraform_io: "${{ secrets.TF_API_TOKEN }}"
       CONFIG_DIRECTORY: "./"
 

@@ -1,8 +1,8 @@
 terraform {
    cloud {
-    organization = "POC-I"
+    organization = "poc-itau-org"
     workspaces {
-      name = "learn-terraform-migrate"
+      name = "itau-pipeline-workspace"
     }
    }
   required_version = ">=0.13.0"
