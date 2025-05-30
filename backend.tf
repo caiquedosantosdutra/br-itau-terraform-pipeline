@@ -1,11 +1,10 @@
 terraform {
-    backend "s3" {
-    bucket         = "terraform-pipeline-itau"
-    region         = "us-east-2"
-    key            = "terraform.tfstate"
-    encrypt = true
-  }
-
+      cloud {
+      organization = "poc-itau-org"
+      workspaces {
+        tags = ["itau-pipeline-workspace"]
+      }
+    }
   required_providers {
     aws = {
       source  = "hashicorp/aws"
