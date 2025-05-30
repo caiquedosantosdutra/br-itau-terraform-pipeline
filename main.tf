@@ -1,28 +1,33 @@
 
+
 provider "aws" {
   region = "us-east-2"
 }
-resource "aws_instance" "ec2_instance_itau" {
-  ami                         = "ami-06c8f2ec674c67112"
-  instance_type               = "t2.micro"
-  subnet_id                   = "subnet-09f35be1a6f0f024b"
 
+data "aws_ami" "ubuntu" {
+  most_recent = true
 
-  metadata_options {
-    http_endpoint               = "enabled"
-    http_tokens                 = "required"
-    http_put_response_hop_limit = 1
+  filter {
+    name   = "name"
+    values = ["ubuntu/images/hvm-ssd/ubuntu-focal-20.04-amd64-server-*"]
   }
 
-  root_block_device {
-    volume_size = 8
-    volume_type = "gp3"
-    encrypted   = true
+  filter {
+    name   = "virtualization-type"
+    values = ["hvm"]
   }
+
+  owners = ["099720109477"] 
+}
+
+resource "aws_instance" "web" {
+  ami           = data.aws_ami.ubuntu.id
+  instance_type = "t2.micro"
+  subnet_id= "subnet-09f35be1a6f0f024b"
+
 
   tags = {
-    Name = "ec2-instance",
+    Name      = "ec2_instance_itau"
     workspace = terraform.workspace
-
   }
 }
