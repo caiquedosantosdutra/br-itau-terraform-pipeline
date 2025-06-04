@@ -2,7 +2,7 @@ terraform {
    cloud {
       organization = "poc-itau-org"
       workspaces {
-        tags = ["caique-dev"]
+        tags = ["itau-pipeline-workspace"]
       }
     }
 
