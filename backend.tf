@@ -1,6 +1,6 @@
 terraform {
 cloud {
-    organization = "poc-itau-org"
+  organization = "poc-itau-org"
     workspaces {
       name = "itau-pipeline-test-bruno"
     }

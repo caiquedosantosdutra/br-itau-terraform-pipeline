@@ -1,0 +1,12 @@
+hcp_hostname: app.terraform.io
+organization: poc-itau-org
+
+workspaces:
+  - name: "itau-pipeline-workspace"
+    working_directory: "./"
+    source_backend:
+      type: "s3"
+      config:
+        bucket: "terraform-pipeline-itau"
+        key: "terraform.tfstate"
+        region: "us-east-2"
