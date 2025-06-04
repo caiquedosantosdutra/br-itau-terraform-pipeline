@@ -1,6 +1,6 @@
 terraform {
    cloud {
-      organization = "poc-itau-org"Add commentMore actions
+      organization = "poc-itau-org"
       workspaces {
         tags = ["itau-pipeline-workspace"]
       }
