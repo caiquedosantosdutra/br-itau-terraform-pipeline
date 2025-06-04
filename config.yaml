@@ -1,6 +1,6 @@
-organization = "poc-itau-org"
 workspace "itau-pipeline-workspace" {
   working_directory = "./"
+  organization = "poc-itau-org"
 
   source_backend "s3" {
     bucket = "terraform-pipeline-itau"
