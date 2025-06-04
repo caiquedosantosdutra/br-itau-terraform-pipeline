@@ -1,7 +1,5 @@
-hcp_hostname = "app.terraform.io"
 organization = "poc-itau-org"
-
-workspace "your-workspace" {
+workspace "itau-pipeline-workspace" {
   working_directory = "./"
 
   source_backend "s3" {
