@@ -1,0 +1,35 @@
+name: Terraform State Migration with tf-migrate
+
+on:
+  workflow_dispatch: # Permite executar manualmente
+
+jobs:
+  migrate:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install tf-migrate
+        run: |
+          curl -Lo tf-migrate.zip https://releases.hashicorp.com/tf-migrate/1.1.0/tf-migrate_1.1.0_linux_amd64.zip
+          unzip tf-migrate.zip
+          sudo mv tf-migrate /usr/local/bin/
+
+      - name: Run tf-migrate prepare
+        run: |
+          tf-migrate prepare -config=config.yaml
+        env:
+          TF_API_TOKEN: ${{ secrets.TF_API_TOKEN }}
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          
+
+      - name: Run tf-migrate execute
+        run: |
+          tf-migrate execute -config=config.yaml
+        env:
+          TF_API_TOKEN: ${{ secrets.TF_API_TOKEN }}
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
