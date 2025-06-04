@@ -1,9 +1,9 @@
 terraform {
-  backend "s3" {
-    bucket         = "terraform-pipeline-itau"
-    region         = "us-east-2"
-    key            = "terraform.tfstate"
-    encrypt = true
+  cloud {
+    organization = "poc-itau-org"
+    workspaces {
+      name = "itau-pipeline-workspace-migration"
+    }
   }
   required_providers {
     aws = {
