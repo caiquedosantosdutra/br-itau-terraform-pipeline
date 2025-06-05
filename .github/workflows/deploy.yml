@@ -26,6 +26,8 @@ jobs:
       TF_API_TOKEN: ${{ secrets.TF_API_TOKEN }}
       BUCKET_NAME: terraform-pipeline-itau
       STATE_FILE: terraform.tfstate
+      AWS_REGION: 'us-east-2'
+
       
 
     steps:
