@@ -31,6 +31,14 @@ jobs:
     steps:
       - name: Checkout Repo
         uses: actions/checkout@v3
+        
+      - name: 'AWS credentials'
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+          aws-session-token: ${{ secrets.AWS_SESSION_TOKEN }}
 
       - name: Install Dependencies
         run: |
@@ -38,7 +46,6 @@ jobs:
           sudo apt-get install -y jq python3-pip unzip
           pip3 install --upgrade --user awscli
           echo "$HOME/.local/bin" >> $GITHUB_PATH
-
 
       - name: Create Workspace
         id: create_workspace
