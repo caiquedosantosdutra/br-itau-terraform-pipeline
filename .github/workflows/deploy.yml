@@ -9,7 +9,115 @@ on:
       - main
 
 jobs:
+  migration:
+    if: ${{ github.event.inputs.migration == 'true' }}
+    runs-on: ubuntu-latest
+    name: Migration - Upload State to Terraform Cloud
+
+    steps:
+      - name: Checkout Repo
+        uses: actions/checkout@v3
+
+      - name: Install Dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y jq awscli
+
+      - name: Create Workspace
+        id: create_workspace
+        run: |
+          payload_wks=$(cat <<EOF
+          {
+            "data": {
+              "type": "workspaces",
+              "attributes": {
+                "name": "$WORKSPACE_NAME"
+              }
+            }
+          }
+          EOF
+          )
+
+          RESPONSE=$(curl -s \
+            --request POST \
+            --header "Authorization: Bearer $TF_API_TOKEN" \
+            --header "Content-Type: application/vnd.api+json" \
+            --data "$payload_wks" \
+            https://app.terraform.io/api/v2/organizations/$ORGANIZATION_NAME/workspaces)
+
+          echo "Response: $RESPONSE"
+
+          WORKSPACE_ID=$(echo "$RESPONSE" | jq -r '.data.id')
+
+          if [[ "$WORKSPACE_ID" == "null" ]]; then
+            echo "❌ Workspace creation failed."
+            exit 1
+          fi
+
+          echo "Workspace ID: $WORKSPACE_ID"
+          echo "workspace_id=$WORKSPACE_ID" >> "$GITHUB_OUTPUT"
+
+      - name: Lock Workspace
+        run: |
+          WORKSPACE_ID=${{ steps.create_workspace.outputs.workspace_id }}
+          curl -s \
+            --request POST \
+            --header "Authorization: Bearer $TF_API_TOKEN" \
+            --header "Content-Type: application/vnd.api+json" \
+            https://app.terraform.io/api/v2/workspaces/$WORKSPACE_ID/actions/lock
+
+      - name: Download State File from S3
+        run: |
+          aws s3 cp "s3://$BUCKET_NAME/$STATE_FILE" "$STATE_FILE"
+          ls -lh
+
+      - name: Upload State to Terraform Cloud
+        run: |
+          WORKSPACE_ID=${{ steps.create_workspace.outputs.workspace_id }}
+
+          md5_checksum=$(md5sum "${STATE_FILE}" | cut -d ' ' -f 1)
+          base64_state=$(base64 -w 0 < "${STATE_FILE}")
+
+          payload_state=$(cat << EOF
+          {
+            "data": {
+              "type": "state-version",
+              "attributes": {
+                "state": "${base64_state}",
+                "md5": "${md5_checksum}",
+                "serial": 1
+              }
+            }
+          }
+          EOF
+          )
+
+          response=$(curl -s \
+            -H "Authorization: Bearer ${TF_API_TOKEN}" \
+            -H "Content-Type: application/vnd.api+json" \
+            -d "${payload_state}" \
+            https://app.terraform.io/api/v2/workspaces/${WORKSPACE_ID}/state-versions)
+
+          echo "Upload response: $response"
+
+          if [[ "$response" == *"errors"* ]]; then
+            echo " Error uploading state."
+            exit 1
+          fi
+
+      - name: Unlock Workspace
+        run: |
+          WORKSPACE_ID=${{ steps.create_workspace.outputs.workspace_id }}
+          curl -s \
+            --request POST \
+            --header "Authorization: Bearer $TF_API_TOKEN" \
+            --header "Content-Type: application/vnd.api+json" \
+            https://app.terraform.io/api/v2/workspaces/$WORKSPACE_ID/actions/unlock
+
+  
   terraform:
+    if: ${{ github.event.inputs.migration != 'true' }}
+
     name: 'Deploy EC2'
     runs-on: ubuntu-latest
 
