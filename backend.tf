@@ -2,7 +2,7 @@ terraform {
   cloud {
     organization = "poc-itau-org"
     workspaces {
-      name = "itau-pipeline-workspace-migration"
+      name = "caique"
     }
   }
   required_providers {
