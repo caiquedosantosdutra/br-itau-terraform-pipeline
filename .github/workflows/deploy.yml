@@ -20,6 +20,10 @@ jobs:
     if: ${{ github.event.inputs.migration == 'true' }}
     runs-on: ubuntu-latest
     name: Migration - Upload State to Terraform Cloud
+    env:
+      WORKSPACE_NAME: caique
+      ORGANIZATION_NAME: poc-itau-org
+      TF_API_TOKEN: ${{ secrets.TF_API_TOKEN }}
 
     steps:
       - name: Checkout Repo
